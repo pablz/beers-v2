@@ -1,61 +1,113 @@
-var beersJson = 'https://raw.githubusercontent.com/pablz/logourl/master/beers.json',
-assetsJson = 'https://raw.githubusercontent.com/pablz/logourl/master/assets.json'
-assetsArr = [],
-beersArr = [],
-intro = document.querySelector('#intro'),
-introBg = document.querySelector('.intro-img');
 
-(()=>{
-    getBeers();
-    getAssets();
-})();
+//component
+Vue.component('listado-birra',{
+    props:{
+        title: {
+            type: String,
+            default: 'Headling'
+        },
+    },
+    template:`
+        <div>
+            <div class="preload" v-if="isLoading">Loading...</div>
+            <section>
+                <article class="content-wrap">
+                <h2>Bienvenido a la {{title}}</h2>
+                    <ul>
+                        <li v-for="(item, index) in listadoBeers" :key="index" >
+                            <h3>
+                                {{item.nombre}}
+                            </h3>
+                            <p>
+                                Precio:{{item.precio}}
+                            </p>
+                            <p>
+                                Quedan:{{item.stock}}
+                            </p>
+                            <input type="number" v-model="cinput.cant[index]" :id="'input-'+index" />
+                            <button @click="addOrLessBeer(cinput.cant[index], index, true)">más birra!</button>
+                            <button @click="addOrLessBeer(cinput.cant[index], index, false)">mmmm, me bajo</button>
+                            <!--<button @click="add(cinput.cant[index], index)">más birra!</button>
+                            <button @click="less(cinput.cant[index], index)">mmmm, me bajo</button>-->
+                        </li>
+                    </ul>
+                </article>
+            </section>
+   
+        </div>
+       
+    `,
+    data: ()=> {
+        return {
+          listadoBeers:[],
+          isLoading: true,
+          cinput: {
+            cant:[]
+          },
+         
+        }
+    },
 
-function getBeers(){
-    //consumir un json de modo asíncrono con fetch api
-    fetch(beersJson)
-    .then(response =>{
-            return response.json();//el método json() extrae el cuerpo del recurso solicitado
-    })
-    .then(data => {//data son los datos del response
-        beersArr.push(data);
-    })
-    .catch(error => {//captura si hubo un error en la petición
-        console.log(error);
-    })
-    .finally(()=>{//fynally nos permite hacer algo si todo salió bien
-        console.log('Llegó la birra!'); 
-        printBeerList();
-    })
-}
+    created(){
+        axios
+        .get("https://raw.githubusercontent.com/pablz/logourl/master/beers.json")
+        .then(response => {
+           this.listadoBeers = response.data.beers;
+        })
+        .catch(error =>{
+            console.log(error)
+        })
+        .finally(()=>{
+            this.isLoading = false;
+            this.setCant();
+        })
+    },
 
-function getAssets(){
-    //consumir un json de modo asíncrono con fetch api
-    fetch(assetsJson)
-    .then(response =>{
-            return response.json();//el método json() extrae el cuerpo del recurso solicitado
-    })
-    .then(data => {//data son los datos del response
-        assetsArr.push(data);
-        console.log(data)
-    })
-    .catch(error => {//captura si hubo un error en la petición
-        console.log(error);
-    })
-    .finally(()=>{//fynally nos permite hacer algo si todo salió bien
-        console.log('Llegaron los assets!'); 
-        setBg();
-    })
-}
+    mounted(){    
+      
+    },
+
+    methods:{
+        setCant(){
+            for(let [index, item] of this.listadoBeers.entries()){
+                this.cinput.cant[index] = 0;
+            }
+        },
+        addOrLessBeer(cant,index,action){
+            let stockActual = this.listadoBeers[index].stock;
+           /* action && cant >= 0 && cant < stockActual ? 
+            this.activeAddOrLess(++cant, index, --this.listadoBeers[index].stock) : 
+            action == false && cant >= 1 && cant < stockActual ?
+            this.activeAddOrLess(--cant, index, ++this.listadoBeers[index].stock) :
+            false;*/
+            if(action && cant >= 0 && cant < stockActual){
+                this.activeAddOrLess(++this.cinput.cant[index], index, --this.listadoBeers[index].stock)
+                console.log(this.cinput.cant[index])
+            }else if (!action && cant >= 1 && cant < stockActual){
+                this.activeAddOrLess(--this.cinput.cant[index], index, ++this.listadoBeers[index].stock)
+            }else {
+                console.log('addOrLessBeers');
+            }
+        },
+        
+        activeAddOrLess(c,i, s){
+            console.log( )
+   
+            
+        },
+
+    },
 
 
-function printBeerList(){
-    console.log(beersArr[0].beers[0].nombre)
-}
 
-function setBg(){
-    for(let item of assetsArr){
-       introBg.src=item.bgs[2].img;
-    }
-}
+});
 
+//modelo
+const app = new Vue({
+    el: '#app',
+    data: {
+        
+    },
+
+})
 

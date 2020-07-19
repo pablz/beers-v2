@@ -19,6 +19,7 @@ $prefixes: ('-webkit-', '-ms-', '-moz-');
   box-sizing: $val;
 }
 
+
 html {
   @include boxSizing(border-box);
   scroll-behavior: smooth;

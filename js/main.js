@@ -22,13 +22,14 @@ Vue.component('listado-birra',{
                                 Precio:{{item.precio}}
                             </p>
                             <p>
-                                Quedan:{{item.stock}}
+                                Quedan:{{item.stock}} en stock
+                            </p>
+                            <p>
+                                Llevas:{{cinput.cant[index]}}
                             </p>
                             <input type="number" v-model="cinput.cant[index]" :id="'input-'+index" />
                             <button @click="addOrLessBeer(cinput.cant[index], index, true)">más birra!</button>
                             <button @click="addOrLessBeer(cinput.cant[index], index, false)">mmmm, me bajo</button>
-                            <!--<button @click="add(cinput.cant[index], index)">más birra!</button>
-                            <button @click="less(cinput.cant[index], index)">mmmm, me bajo</button>-->
                         </li>
                     </ul>
                 </article>
@@ -80,10 +81,10 @@ Vue.component('listado-birra',{
             action == false && cant >= 1 && cant < stockActual ?
             this.activeAddOrLess(--cant, index, ++this.listadoBeers[index].stock) :
             false;*/
-            if(action && cant >= 0 && cant < stockActual){
+            if(action && cant >= 0 && stockActual >= 1){
                 this.activeAddOrLess(++this.cinput.cant[index], index, --this.listadoBeers[index].stock)
                 console.log(this.cinput.cant[index])
-            }else if (!action && cant >= 1 && cant < stockActual){
+            }else if (!action && cant >= 1 && stockActual >= 1){
                 this.activeAddOrLess(--this.cinput.cant[index], index, ++this.listadoBeers[index].stock)
             }else {
                 console.log('addOrLessBeers');

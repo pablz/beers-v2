@@ -1,80 +1,80 @@
-
-//component
-Vue.component('listado-birra',{
-    props:{
-        title: {
-            type: String,
-            default: 'Headling'
-        },
+const store = new Vuex.Store({
+    state:{
+        listadoBeers:[],
+        cuentaTotal:[],
+        loading:true,
     },
-    template:`
-        <div>
-            <div class="preload" v-if="isLoading">Loading...</div>
-            <section>
-                <article class="content-wrap">
-                <h2>Bienvenido a la {{title}}</h2>
-                    <ul>
-                        <li v-for="(item, index) in listadoBeers" :key="index" >
-                            <h3>
-                                {{item.nombre}}
-                            </h3>
-                            <p>
-                                Precio:{{item.precio}}
-                            </p>
-                            <p>
-                                Quedan:{{item.stock}} en stock
-                            </p>
-                            <p>
-                                Llevas:{{cinput.cant[index]}}
-                            </p>
-                            <input type="number" readonly v-model="cinput.cant[index]" :id="'input-'+index" />
-                            <button @click="addOrLessBeer(cinput.cant[index], index, true)">más birra!</button>
-                            <button @click="addOrLessBeer(cinput.cant[index], index, false)">mmmm, me bajo</button>
-                        </li>
-                    </ul>
-                </article>
-            </section>
-   
-        </div>
-       
-    `,
-    data: ()=> {
-        return {
-          listadoBeers:[],
-          cuentaTotal: [],
-          isLoading: true,
-          cinput: {
-            cant:[]
-          },
-         
+    mutations:{
+        mtnListadoBeers(state,n){
+            state.listadoBeers = n;
+        },
+        mtnCuentaTotal(state,n){
+            state.cuentaTotal = n;
         }
     },
-
-    created(){
-        axios
-        .get("https://raw.githubusercontent.com/pablz/logourl/master/beers.json")
-        .then(response => {
-           this.listadoBeers = response.data.beers;
-        })
-        .catch(error =>{
-            console.log(error)
-        })
-        .finally(()=>{
-            this.isLoading = false;
-            this.setCant();
-        })
+    getters:{
+        getListadoBeers(state){
+            return state.listadoBeers;
+        },
+        getCuentaTotal(state){
+            return state.cuentaTotal;
+        }
     },
+    actions:{
+        setListadoBeers: ({ commit }, n) => {
+            commit('mtnListadoBeers', n)
+        },
+        setCuentaTotal:({commit},n) => {
+            commit('mtnCuentaTotal');
+        }
+    }
+});
 
-    mounted(){    
+//components
+Vue.component('app-listado-beers',{
+    template:`
+        <ul>
+        
+            <li v-for="(item, index) in listadoBeers" :key="index" >
+                <h3>
+                    {{item.nombre}}
+                </h3>
+                <p>
+                    Precio:{{item.precio}}
+                </p>
+                <p>
+                    Quedan:{{item.stock}} en stock
+                </p>
+                <p>
+                    Llevas:{{cinput.cant[index]}}
+                </p>
+                <input type="number" readonly v-model="cinput.cant[index]" :id="'input-' + index" />
+                <button @click="addOrLessBeer(cinput.cant[index], index, true)">más birra!</button>
+                <button @click="addOrLessBeer(cinput.cant[index], index, false)">mmmm, me bajo</button>
+            </li>
+        </ul>
+    `,
+    data:()=> {
+        return {
+            cinput: {
+                cant:[]
+            },
+            lis:[]
+        }
+    },
+    created(){
       
     },
-
-    methods:{
-        setCant(){
-            for(let [index, item] of this.listadoBeers.entries()){
+    computed:{
+        listadoBeers(){
+            let listado = store.getters.getListadoBeers;
+            for(let [index, item] of listado.entries()){
                 this.cinput.cant[index] = 0;
-            }
-        },
+            }  
+            return this.list = listado;
+        }
+    },
+    methods:{
         addOrLessBeer(cant,index,action){
             let stockActual = this.listadoBeers[index].stock;
             action && cant >= 0 && stockActual >= 1 ? 
@@ -85,18 +85,64 @@ Vue.component('listado-birra',{
         },
         
         activeAddOrLess(c,i, s){
-            console.log( )
+            console.log('ls'+this.listadoBeers)
+            let nuevoArr = [...this.listadoBeers];
+            console.log('dfdf'+nuevoArr)
+            return store.dispatch('setCuentaTotal', nuevoArr);
         },
-
     },
+    
 });
+
+Vue.component('app-cerrar-mesa',{
+    template:`
+        <div class="cerrar-cuenta">
+            <ul class="boleta">
+                <li v-for="item in listarCuenta">
+                    item
+                </li>
+            </ul>
+            <button>Pagar</button>
+        </div>
+    `,
+    data:()=> {
+        return {
+            
+        }
+    },
+    computed:{
+        listarCuenta(){
+            console.log(store.getters.getCuentaTotal)
+            return store.getters.getCuentaTotal;
+        }
+       
+    }
+})
+
 
 //modelo
 const app = new Vue({
     el: '#app',
     data: {
-        
+
     },
+    created(){
+        axios
+        .get("https://raw.githubusercontent.com/pablz/logourl/master/beers.json")
+        .then(response => {
+           let beers = response.data.beers;
+           return store.dispatch('setListadoBeers', beers); 
+        })
+        .catch(error =>{
+            console.error(error)
+        })
+        .finally(()=>{
+           
+            //this.isLoading = false;
+            //this.setCant();
+        })
+    },
+
 
 })
 

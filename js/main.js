@@ -25,7 +25,7 @@ const store = new Vuex.Store({
             commit('mtnListadoBeers', n)
         },
         setCuentaTotal:({commit},n) => {
-            commit('mtnCuentaTotal');
+            commit('mtnCuentaTotal', n);
         }
     }
 });
@@ -48,6 +48,9 @@ Vue.component('app-listado-beers',{
                 <p>
                     Llevas:{{cinput.cant[index]}}
                 </p>
+                <p>
+                    Importe:{{currentBeer.importe[index]}}
+                </p>
                 <input type="number" readonly v-model="cinput.cant[index]" :id="'input-' + index" />
                 <button @click="addOrLessBeer(cinput.cant[index], index, true)">más birra!</button>
                 <button @click="addOrLessBeer(cinput.cant[index], index, false)">mmmm, me bajo</button>
@@ -59,7 +62,9 @@ Vue.component('app-listado-beers',{
             cinput: {
                 cant:[]
             },
-            lis:[]
+            currentBeer:{
+                importe:[]
+            },
         }
     },
     created(){
@@ -70,26 +75,40 @@ Vue.component('app-listado-beers',{
             let listado = store.getters.getListadoBeers;
             for(let [index, item] of listado.entries()){
                 this.cinput.cant[index] = 0;
+                this.currentBeer.importe[index] = 0;
             }  
-            return this.list = listado;
-        }
+            return listado;
+        },
+
     },
     methods:{
         addOrLessBeer(cant,index,action){
             let stockActual = this.listadoBeers[index].stock;
-            action && cant >= 0 && stockActual >= 1 ? 
-             this.activeAddOrLess(++this.cinput.cant[index], index, --this.listadoBeers[index].stock) : 
-            !action && cant >= 1 && stockActual >= 1 ?
-            this.activeAddOrLess(--this.cinput.cant[index], index, ++this.listadoBeers[index].stock) :
-            console.log('addOrLessBeers');
+            if(action && cant >= 0 && stockActual >= 1){
+                ++this.cinput.cant[index];
+                --this.listadoBeers[index].stock;
+                this.setImporte(index);
+            }else if(!action && cant >= 1 && stockActual >= 1){
+                --this.cinput.cant[index];
+                ++this.listadoBeers[index].stock;
+                this.setImporte(index);
+            }else {
+                console.log('out')
+            }
         },
+
+        setImporte(i){
+            let cloneListadoBeers = [...this.listadoBeers];
+            this.currentBeer.importe[i] = this.listadoBeers[i].precio * this.cinput.cant[i];
+            for (let [index,item] of cloneListadoBeers .entries()){
+                cloneListadoBeers[index].cantidad =  this.cinput.cant[index];
+                cloneListadoBeers[index].importe = this.listadoBeers[index].precio * this.cinput.cant[index]; 
+            }
+            console.log(cloneListadoBeers);
+            return store.dispatch('setCuentaTotal',  cloneListadoBeers);
+            
+        }
         
-        activeAddOrLess(c,i, s){
-            console.log('ls'+this.listadoBeers)
-            let nuevoArr = [...this.listadoBeers];
-            console.log('dfdf'+nuevoArr)
-            return store.dispatch('setCuentaTotal', nuevoArr);
-        },
     },
     
 });
@@ -97,25 +116,33 @@ Vue.component('app-listado-beers',{
 Vue.component('app-cerrar-mesa',{
     template:`
         <div class="cerrar-cuenta">
-            <ul class="boleta">
+            <ul class="boleta" v-if="showCuenta">
                 <li v-for="item in listarCuenta">
-                    item
+                   <p>Nombre: {{item.nombre}} - Precio: {{item.precio}}</p>
+                   <p>Cantidad: {{item.cantidad}}</p>
+                   <p>Subtotal: {{item.importe}}</p>
+                   <p>{{total}}</p>
                 </li>
             </ul>
-            <button>Pagar</button>
+            <button @click="cuenta()">Pagar</button>
         </div>
     `,
     data:()=> {
         return {
-            
+            showCuenta: false,
+            total:'',
         }
     },
     computed:{
         listarCuenta(){
-            console.log(store.getters.getCuentaTotal)
-            return store.getters.getCuentaTotal;
+           return store.getters.getCuentaTotal.filter(item => item.cantidad >= 1);
         }
-       
+        
+    },
+    methods:{
+        cuenta(){
+            this.showCuenta = !this.showCuenta;
+        }
     }
 })
 
@@ -137,9 +164,7 @@ const app = new Vue({
             console.error(error)
         })
         .finally(()=>{
-           
-            //this.isLoading = false;
-            //this.setCant();
+
         })
     },
 

@@ -72,10 +72,12 @@ Vue.component('app-listado-beers',{
     },
     computed:{
         listadoBeers(){
-            let listado = store.getters.getListadoBeers;
+            let listado = store.getters.getListadoBeers,
+            valueDelInput =  this.cinput.cant,
+            currentBeer =  this.currentBeer;
             for(let [index, item] of listado.entries()){
-                this.cinput.cant[index] = 0;
-                this.currentBeer.importe[index] = 0;
+                valueDelInput[index] = 0;
+                currentBeer.importe[index] = 0;
             }  
             return listado;
         },
@@ -83,26 +85,28 @@ Vue.component('app-listado-beers',{
     },
     methods:{
         addOrLessBeer(cant,index,action){
-            let stockActual = this.listadoBeers[index].stock;
+            let stockActual = this.listadoBeers[index].stock,
+            valueInputActual = this.cinput.cant,
+            stockBirraActual = this.listadoBeers;
             if(action && cant >= 0 && stockActual >= 1){
-                ++this.cinput.cant[index];
-                --this.listadoBeers[index].stock;
-                this.setImporte(index);
+                ++valueInputActual[index];
+                --stockBirraActual[index].stock;
+                this.setImporte(index, valueInputActual);
             }else if(!action && cant >= 1 && stockActual >= 1){
-                --this.cinput.cant[index];
+                --valueInputActual[index];
                 ++this.listadoBeers[index].stock;
-                this.setImporte(index);
+                this.setImporte(index, valueInputActual);
             }else {
                 console.log('out')
             }
         },
 
-        setImporte(i){
-            let cloneListadoBeers = [...this.listadoBeers];
-            this.currentBeer.importe[i] = this.listadoBeers[i].precio * this.cinput.cant[i];
+        setImporte(i, valueInput){
+            let cloneListadoBeers = [...this.listadoBeers] //[...this.listadoBeers] hace un clone del array;
+            this.currentBeer.importe[i] = this.listadoBeers[i].precio * valueInput[i];
             for (let [index,item] of cloneListadoBeers .entries()){
-                cloneListadoBeers[index].cantidad =  this.cinput.cant[index];
-                cloneListadoBeers[index].importe = this.listadoBeers[index].precio * this.cinput.cant[index]; 
+                cloneListadoBeers[index].cantidad =  valueInput[index];
+                cloneListadoBeers[index].importe = this.listadoBeers[index].precio * valueInput[index]; 
             }
             console.log(cloneListadoBeers);
             return store.dispatch('setCuentaTotal',  cloneListadoBeers);
@@ -144,10 +148,9 @@ Vue.component('app-cerrar-mesa',{
             this.showCuenta = !this.showCuenta;
         }
     }
-})
+});
 
-
-//modelo
+//modelo -
 const app = new Vue({
     el: '#app',
     data: {
@@ -157,6 +160,7 @@ const app = new Vue({
         axios
         .get("https://raw.githubusercontent.com/pablz/logourl/master/beers.json")
         .then(response => {
+            console.log(response.data)
            let beers = response.data.beers;
            return store.dispatch('setListadoBeers', beers); 
         })
@@ -170,4 +174,6 @@ const app = new Vue({
 
 
 })
+
+
 
